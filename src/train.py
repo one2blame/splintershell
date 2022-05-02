@@ -68,10 +68,12 @@ def main() -> int:
         protocol_parser(filepath=filepath)
         for filepath in Path(opts.directory).iterdir()
     ]
+
+    protocol_data = []
     for parser in protocol_parsers:
         parser.parse_pcap()
-    payloads = [parser.get_parsed_pcap() for parser in protocol_parsers]
+        protocol_data.append(parser.get_parsed_pcap())
     # TODO remove
-    print(payloads)
+    print(protocol_data)
 
     return 0
