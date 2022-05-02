@@ -60,13 +60,8 @@ def main() -> int:
     if validate_args(opts):
         return 1
 
-    protocol_parser = protocols.get(opts.protocol, None)
-    if not protocol_parser:
-        return 1
-
     protocol_parsers = [
-        protocol_parser(filepath=filepath)
-        for filepath in Path(opts.directory).iterdir()
+        opts.protocol(filepath=filepath) for filepath in Path(opts.directory).iterdir()
     ]
 
     protocol_data = []
