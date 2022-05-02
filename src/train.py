@@ -45,6 +45,7 @@ def validate_args(opts: Namespace) -> int:
             f"Directory does not exist: {str(Path(opts.directory).resolve())}"
         )
         return 1
+
     try:
         assert protocols.get(opts.protocol, None)
     except AssertionError:
@@ -58,5 +59,19 @@ def main() -> int:
     opts = get_parsed_args()
     if validate_args(opts):
         return 1
+
+    protocol_parser = protocols.get(opts.protocol, None)
+    if not protocol_parser:
+        return 1
+
+    protocol_parsers = [
+        protocol_parser(filepath=filepath)
+        for filepath in Path(opts.directory).iterdir()
+    ]
+    for parser in protocol_parsers:
+        parser.parse_pcap()
+    payloads = [parser.get_parsed_pcap() for parser in protocol_parsers]
+    # TODO remove
+    print(payloads)
 
     return 0

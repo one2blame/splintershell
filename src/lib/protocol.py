@@ -1,5 +1,5 @@
 from .protocols import http
 
 protocols = {
-    "http": http.Parser
+    "http": http.PcapParser
 }
