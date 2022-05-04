@@ -4,6 +4,7 @@ from pathlib import Path
 
 from .lib.constants import DEFAULT_SAMPLE_RATIO
 from .lib.protocol import protocols
+from .lib.util import shuffle_and_split
 
 
 def get_parsed_args() -> Namespace:
@@ -30,6 +31,7 @@ def get_parsed_args() -> Namespace:
         "--sample-ratio",
         "-s",
         dest="sample_ratio",
+        type=float,
         default=DEFAULT_SAMPLE_RATIO,
         help=f"specify the ratio of training to testing data, default: {DEFAULT_SAMPLE_RATIO}",
     )
@@ -52,6 +54,12 @@ def validate_args(opts: Namespace) -> int:
         logging.error(f"Protocol specified not supported: {opts.protocol}")
         return 1
 
+    try:
+        assert opts.sample_ratio < 1.0
+        assert opts.sample_ratio > 0.0
+    except AssertionError:
+        logging.error(f"Sample ratio should range from 0.0 to 1.0: {opts.sample_ratio}")
+
     return 0
 
 
@@ -69,8 +77,14 @@ def main() -> int:
     protocol_data = []
     for parser in protocol_parsers:
         parser.parse_pcap()
-        protocol_data.append(parser.get_parsed_pcap())
-    # TODO remove
-    print(protocol_data)
+        for entry in parser.get_parsed_pcap():
+            protocol_data.append(entry)
+
+    training_data, test_data = shuffle_and_split(
+        data=protocol_data, split_ratio=opts.sample_ratio
+    )
+
+    print(training_data)
+    print(test_data)
 
     return 0
