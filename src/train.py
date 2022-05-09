@@ -5,6 +5,7 @@ from pathlib import Path
 from .lib.constants import DEFAULT_SAMPLE_RATIO
 from .lib.protocol import protocols
 from .lib.util import shuffle_and_split
+from .payl.payl import Payl
 
 
 def get_parsed_args() -> Namespace:
@@ -84,7 +85,7 @@ def main() -> int:
         data=protocol_data, split_ratio=opts.sample_ratio
     )
 
-    print(training_data)
-    print(test_data)
+    model = Payl(smoothing_factor=3, classification_threshold=20, discrete_steps=10)
+    model.train(training_data=training_data, test_data=test_data)
 
     return 0
