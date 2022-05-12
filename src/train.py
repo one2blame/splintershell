@@ -86,6 +86,6 @@ def main() -> int:
     )
 
     model = Payl(smoothing_factor=3, classification_threshold=20, discrete_steps=10)
-    model.train(training_data=training_data, test_data=test_data)
+    model.train(training_data=training_data)
 
     return 0
