@@ -81,11 +81,13 @@ def main() -> int:
         for entry in parser.get_parsed_pcap():
             protocol_data.append(entry)
 
-    training_data, test_data = shuffle_and_split(
+    training_data, testing_data = shuffle_and_split(
         data=protocol_data, split_ratio=opts.sample_ratio
     )
 
     model = Payl(smoothing_factor=3, classification_threshold=20, discrete_steps=10)
     model.train(training_data=training_data)
+    print(f"{model.thresholds}")
+    print(f"True positives: {model.test(testing_data=testing_data)}")
 
     return 0

@@ -36,15 +36,16 @@ class Payl:
             for i in range(self.discrete_steps - 1)
         ]
         self.thresholds.append(training_data_element_lengths[-1])
+        self.thresholds = list(sorted(set(self.thresholds)))
 
         buckets: Dict[int, list] = {}
         for element in training_data:
-            for i in range(self.discrete_steps):
-                if len(element) <= self.thresholds[i]:
-                    if not buckets.get(self.thresholds[i], None):
-                        buckets[self.thresholds[i]] = [element]
+            for threshold in self.thresholds:
+                if len(element) <= threshold:
+                    if not buckets.get(threshold, None):
+                        buckets[threshold] = [element]
                     else:
-                        buckets[self.thresholds[i]].append(element)
+                        buckets[threshold].append(element)
                     break
 
         for threshold, bucket in sorted(buckets.items()):
@@ -58,6 +59,8 @@ class Payl:
             ).T
 
     def test(self, testing_data: list) -> float:
+        true_positives = 0
+
         for element in testing_data:
             bucket = None
 
@@ -79,5 +82,7 @@ class Payl:
             else:
                 distance = np.inf
 
-        # TODO calculate detection rate
-        return 0.0
+            if distance <= self.classification_threshold:
+                true_positives += 1
+
+        return (true_positives / float(len(testing_data))) * 100
