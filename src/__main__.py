@@ -4,9 +4,11 @@ import logging
 import sys
 
 from .calibrate import main as calibrate_main
+from .test import main as test_main
 
 programs = {
     "calibrate": calibrate_main,
+    "test": test_main,
 }
 
 

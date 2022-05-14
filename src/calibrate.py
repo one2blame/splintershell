@@ -197,9 +197,10 @@ def main() -> int:
     with Path(opts.output).open(mode="w") as output_file:
         for threshold, feature_vector in model.feature_vectors.items():
             model.feature_vectors[threshold] = feature_vector.tolist()
-        model.feature_vectors[np.inf] = (  # type: ignore
-            DEFAULT_SMOOTHING_FACTOR / 10,
+        model.feature_vectors["metadata"] = (  # type: ignore
+            DEFAULT_SMOOTHING_FACTOR,
             classification_threshold,
+            opts.protocol,
         )
         output_file.write(json.dumps(model.feature_vectors))
 

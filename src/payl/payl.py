@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
@@ -97,3 +99,28 @@ class Payl:
                 true_positives += 1.0
 
         return (true_positives / float(len(testing_data))) * 100.0
+
+    @staticmethod
+    def parse_model(model_file: Path) -> tuple:
+        with model_file.open("r") as input_file:
+            model = json.load(input_file)
+
+        if not model.get("metadata", None):
+            raise IndexError(
+                f"Model metadata not provided in PAYL model file: {str(Path(model_file).resolve())}"
+            )
+
+        smoothing_factor, classification_threshold, protocol = model.pop("metadata")
+        thresholds = model.keys()
+
+        feature_vectors = dict()
+        for threshold, feature_vector in model.items():
+            feature_vectors[threshold] = np.asarray(feature_vector)
+
+        return (
+            smoothing_factor,
+            classification_threshold,
+            protocol,
+            thresholds,
+            feature_vectors,
+        )
