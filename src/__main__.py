@@ -3,10 +3,10 @@
 import logging
 import sys
 
-from .train import main as train_main
+from .calibrate import main as calibrate_main
 
 programs = {
-    "train": train_main,
+    "calibrate": calibrate_main,
 }
 
 

@@ -1,5 +1,3 @@
-import logging
-
 from dpkt import ethernet, pcap
 
 from .basepcapparser import BasePcapParser
@@ -17,5 +15,5 @@ class PcapParser(BasePcapParser):
                         if http_data and all(ord(c) < 256 for c in http_data):
                             self.payload_list.append(http_data)
         except Exception as e:
-            logging.error(f"Failed to read provided file: {str(self.filepath)}")
+            print(f"Failed to read provided file: {str(self.filepath)}")
             raise e

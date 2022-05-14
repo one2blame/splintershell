@@ -1,17 +1,14 @@
-import numpy as np
 from typing import Dict, List
+
+import numpy as np
 
 
 class Payl:
     def __init__(
         self,
-        smoothing_factor: float,
-        classification_threshold: float,
         discrete_steps: int,
         verbose: bool = False,
     ):
-        self.smoothing_factor = smoothing_factor
-        self.classification_threshold = classification_threshold
         self.discrete_steps = discrete_steps
         self.verbose = verbose
 
@@ -24,6 +21,10 @@ class Payl:
 
     def train(self, training_data: list) -> None:
         stepsize = int(np.ceil(len(max(training_data, key=len)) / self.discrete_steps))
+
+        if self.verbose:
+            print(f"Separating training data into buckets of size ({stepsize})...")
+
         training_data_element_lengths = sorted(
             set([len(element) for element in training_data])
         )
@@ -38,15 +39,22 @@ class Payl:
         self.thresholds.append(training_data_element_lengths[-1])
         self.thresholds = list(sorted(set(self.thresholds)))
 
+        if self.verbose:
+            print(f"Buckets: {self.thresholds}")
+            print(
+                f"Sorting ({len(training_data)}) training data elements into buckets..."
+            )
+
         buckets: Dict[int, list] = {}
         for element in training_data:
-            for threshold in self.thresholds:
-                if len(element) <= threshold:
-                    if not buckets.get(threshold, None):
-                        buckets[threshold] = [element]
-                    else:
-                        buckets[threshold].append(element)
-                    break
+            threshold = min(self.thresholds, key=lambda x: abs(len(element) - x))
+            if not buckets.get(threshold, None):
+                buckets[threshold] = [element]
+            else:
+                buckets[threshold].append(element)
+
+        if self.verbose:
+            print(f"Training the PAYL model...")
 
         for threshold, bucket in sorted(buckets.items()):
             freq_array = np.array(
@@ -58,16 +66,19 @@ class Payl:
                 (mean_freq_array, stddev_freq_array)
             ).T
 
-    def test(self, testing_data: list) -> float:
-        true_positives = 0
+        if self.verbose:
+            print(f"Training complete!")
+
+    def test(
+        self,
+        smoothing_factor: float,
+        classification_threshold: float,
+        testing_data: list,
+    ) -> float:
+        true_positives = 0.0
 
         for element in testing_data:
-            bucket = None
-
-            for threshold in self.thresholds:
-                if len(element) <= threshold:
-                    bucket = threshold
-                    break
+            bucket = min(self.thresholds, key=lambda x: abs(len(element) - x))
 
             if bucket:
                 testpoints = self._get_freq_from_str(element)
@@ -75,14 +86,14 @@ class Payl:
 
                 distances = [
                     (abs(testpoints[char] - features[char][0]))
-                    / (features[char][1] + self.smoothing_factor)
+                    / (features[char][1] + smoothing_factor)
                     for char in range(256)
                 ]
                 distance = sum(distances)
             else:
                 distance = np.inf
 
-            if distance <= self.classification_threshold:
-                true_positives += 1
+            if distance <= classification_threshold:
+                true_positives += 1.0
 
-        return (true_positives / float(len(testing_data))) * 100
+        return (true_positives / float(len(testing_data))) * 100.0
