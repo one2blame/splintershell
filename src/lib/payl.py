@@ -4,6 +4,8 @@ from typing import Dict, List
 
 import numpy as np
 
+from .constants import PAYL_METADATA_KEY
+
 
 class Payl:
     def __init__(
@@ -105,7 +107,7 @@ class Payl:
         with model_file.open("r") as input_file:
             model = json.load(input_file)
 
-        if not model.get("metadata", None):
+        if not model.get(PAYL_METADATA_KEY, None):
             raise IndexError(
                 f"Model metadata not provided in PAYL model file: {str(Path(model_file).resolve())}"
             )

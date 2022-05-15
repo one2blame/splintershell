@@ -3,8 +3,6 @@ import time
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-import numpy as np
-
 from .lib.constants import (
     CONVERGENCE_CONSTANT,
     DEFAULT_DISCOUNT_RATE,
@@ -19,11 +17,12 @@ from .lib.constants import (
     MAX_EPOCHS,
     MAX_SAMPLE_RATIO,
     MIN_SAMPLE_RATIO,
+    PAYL_METADATA_KEY,
 )
 from .lib.protocol import protocols
 from .lib.qlearner import QLearner
 from .lib.util import shuffle_and_split
-from .payl.payl import Payl
+from .lib.payl import Payl
 
 
 def get_parsed_args() -> Namespace:
@@ -197,7 +196,7 @@ def main() -> int:
     with Path(opts.output).open(mode="w") as output_file:
         for threshold, feature_vector in model.feature_vectors.items():
             model.feature_vectors[threshold] = feature_vector.tolist()
-        model.feature_vectors["metadata"] = (  # type: ignore
+        model.feature_vectors[PAYL_METADATA_KEY] = (  # type: ignore
             DEFAULT_SMOOTHING_FACTOR,
             classification_threshold,
             opts.protocol,
