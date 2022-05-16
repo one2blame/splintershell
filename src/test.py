@@ -1,8 +1,8 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from .lib.protocol import protocols
 from .lib.payl import Payl
+from .lib.protocol import protocols
 
 
 def get_parsed_args() -> Namespace:
@@ -71,6 +71,30 @@ def main() -> int:
     if validate_args(opts):
         return 1
 
-    print(f"{Payl.parse_model(model_file=Path(opts.model).resolve())}")
+    calibrated_thresholds, protocol, bucket_sizes, feature_vectors = Payl.parse_model(
+        model_file=Path(opts.model).resolve()
+    )
+
+    if protocol != opts.protocol:
+        print(
+            f"Protocol provided ({opts.protocol}) doesn't match input file protocol: ({protocol})!"
+        )
+        return 1
+
+    model = Payl(discrete_steps=len(bucket_sizes), verbose=opts.verbose)
+    model.bucket_sizes = bucket_sizes
+    model.feature_vectors = feature_vectors
+
+    if opts.verbose:
+        print(f"Reading input data file...")
+    with Path(opts.input).resolve().open("rb") as input_file:
+        input_data = [input_file.read().decode("utf8")]
+
+    print(
+        model.test(
+            classification_thresholds=calibrated_thresholds,
+            testing_data=input_data,
+        )
+    )
 
     return 0

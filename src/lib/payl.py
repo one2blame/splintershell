@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
+from scipy.spatial.distance import cityblock
 
 from .constants import PAYL_METADATA_KEY
 
@@ -15,8 +16,7 @@ class Payl:
     ):
         self.discrete_steps = discrete_steps
         self.verbose = verbose
-
-        self.thresholds: List[int] = []
+        self.bucket_sizes: List[int] = []
         self.feature_vectors: Dict[int, np.ndarray] = {}
 
     @staticmethod
@@ -33,74 +33,77 @@ class Payl:
             set([len(element) for element in training_data])
         )
 
-        self.thresholds = [
+        self.bucket_sizes = [
             min(
                 training_data_element_lengths,
                 key=lambda x: abs(x - ((i + 1) * stepsize)),
             )
             for i in range(self.discrete_steps - 1)
         ]
-        self.thresholds.append(training_data_element_lengths[-1])
-        self.thresholds = list(sorted(set(self.thresholds)))
+        self.bucket_sizes.append(training_data_element_lengths[-1])
+        self.bucket_sizes = list(sorted(set(self.bucket_sizes)))
 
         if self.verbose:
-            print(f"Buckets: {self.thresholds}")
+            print(f"Buckets: {self.bucket_sizes}")
             print(
                 f"Sorting ({len(training_data)}) training data elements into buckets..."
             )
 
         buckets: Dict[int, list] = {}
         for element in training_data:
-            threshold = min(self.thresholds, key=lambda x: abs(len(element) - x))
-            if not buckets.get(threshold, None):
-                buckets[threshold] = [element]
+            bucket_size = min(self.bucket_sizes, key=lambda x: abs(len(element) - x))
+            if not buckets.get(bucket_size, None):
+                buckets[bucket_size] = [element]
             else:
-                buckets[threshold].append(element)
+                buckets[bucket_size].append(element)
 
         if self.verbose:
             print(f"Training the PAYL model...")
 
-        for threshold, bucket in sorted(buckets.items()):
+        for bucket_size, bucket in sorted(buckets.items()):
             freq_array = np.array(
                 [self._get_freq_from_str(string=string) for string in bucket]
             )
-            stddev_freq_array = np.std(freq_array, axis=0)
             mean_freq_array = np.mean(freq_array, axis=0)
-            self.feature_vectors[threshold] = np.vstack(
-                (mean_freq_array, stddev_freq_array)
-            ).T
+            self.feature_vectors[bucket_size] = mean_freq_array
 
         if self.verbose:
             print(f"Training complete!")
 
     def test(
         self,
-        smoothing_factor: float,
-        classification_threshold: float,
+        classification_thresholds: dict,
         testing_data: list,
-    ) -> float:
-        true_positives = 0.0
+    ) -> dict:
+        results = dict.fromkeys(self.bucket_sizes, (0.0, 0.0))
 
-        for element in testing_data:
-            bucket = min(self.thresholds, key=lambda x: abs(len(element) - x))
+        for i in range(len(self.bucket_sizes)):
+            true_positives = 0.0
+            max_distance = 0.0
 
-            if bucket:
-                testpoints = self._get_freq_from_str(element)
-                features = self.feature_vectors[bucket]
+            classification_threshold = classification_thresholds.get(self.bucket_sizes[i], None)
+            features = self.feature_vectors.get(self.bucket_sizes[i], None)
 
-                distances = [
-                    (abs(testpoints[char] - features[char][0]))
-                    / (features[char][1] + smoothing_factor)
-                    for char in range(256)
-                ]
-                distance = sum(distances)
+            if i > 0:
+                this_testing_data = [element for element in testing_data if len(element) <= self.bucket_sizes[i] and len(element) > self.bucket_sizes[i-1]]
             else:
-                distance = np.inf
+                this_testing_data = [element for element in testing_data if
+                                     len(element) <= self.bucket_sizes[i]]
 
-            if distance <= classification_threshold:
-                true_positives += 1.0
+            if not len(this_testing_data):
+                continue
 
-        return (true_positives / float(len(testing_data))) * 100.0
+            for element in this_testing_data:
+                testpoints = np.array(self._get_freq_from_str(element))
+                distance = cityblock(testpoints, features)
+                max_distance = max(max_distance, distance)
+
+                if distance <= classification_threshold:
+                    true_positives += 1.0
+
+            results[self.bucket_sizes[i]] = (true_positives / float(len(this_testing_data))) * 100.0, max_distance
+
+        return results
 
     @staticmethod
     def parse_model(model_file: Path) -> tuple:
@@ -112,17 +115,20 @@ class Payl:
                 f"Model metadata not provided in PAYL model file: {str(Path(model_file).resolve())}"
             )
 
-        smoothing_factor, classification_threshold, protocol = model.pop("metadata")
-        thresholds = model.keys()
+        classification_thresholds, protocol = model.pop(PAYL_METADATA_KEY)
+        bucket_sizes = list(map(int, list(model.keys())))
+
+        calibrated_thresholds = dict()
+        for bucket_size, distance in classification_thresholds.items():
+            calibrated_thresholds[int(bucket_size)] = distance
 
         feature_vectors = dict()
-        for threshold, feature_vector in model.items():
-            feature_vectors[threshold] = np.asarray(feature_vector)
+        for bucket_size, feature_vector in model.items():
+            feature_vectors[int(bucket_size)] = np.asarray(feature_vector)
 
         return (
-            smoothing_factor,
-            classification_threshold,
+            calibrated_thresholds,
             protocol,
-            thresholds,
+            bucket_sizes,
             feature_vectors,
         )
