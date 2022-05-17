@@ -3,27 +3,16 @@ import time
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-import numpy as np
-
 from .lib.constants import (
-    CONVERGENCE_CONSTANT,
-    DEFAULT_DISCOUNT_RATE,
-    DEFAULT_DISTANCE_STEP,
-    DEFAULT_DISTANCE_VECTOR,
-    DEFAULT_LEARNING_RATE,
     DEFAULT_NUMBER_OF_BUCKETS,
-    DEFAULT_RANDOM_ACTION_DECAY_RATE,
-    DEFAULT_RANDOM_ACTION_RATE,
     DEFAULT_SAMPLE_RATIO,
-    DEFAULT_SMOOTHING_FACTOR,
-    MAX_EPOCHS,
     MAX_SAMPLE_RATIO,
     MIN_SAMPLE_RATIO,
+    PAYL_METADATA_KEY,
 )
+from .lib.payl import Payl
 from .lib.protocol import protocols
-from .lib.qlearner import QLearner
 from .lib.util import shuffle_and_split
-from .payl.payl import Payl
 
 
 def get_parsed_args() -> Namespace:
@@ -130,76 +119,22 @@ def main() -> int:
         print(
             f"Testing the trained PAYL model against ({len(testing_data)}) testing data elements..."
         )
-        print(f"Using reinforcement learning to tune classification threshold...")
 
-    distances = DEFAULT_DISTANCE_VECTOR
-    qlearner = QLearner(
-        num_states=(2 * len(distances)),
-        num_actions=2,
-        alpha=DEFAULT_LEARNING_RATE,
-        gamma=DEFAULT_DISCOUNT_RATE,
-        rar=DEFAULT_RANDOM_ACTION_RATE,
-        radr=DEFAULT_RANDOM_ACTION_DECAY_RATE,
-        dyna=0,
-        verbose=opts.verbose,
+    classification_thresholds = dict.fromkeys(model.bucket_sizes, 0)
+    results = model.test(
+        classification_thresholds=classification_thresholds, testing_data=testing_data
     )
-
-    action = 0
-    distances_index = 0
-    converged = 0
-    prev_reward = 0
-    classification_threshold = distances[distances_index] * DEFAULT_DISTANCE_STEP
-    for epoch in range(MAX_EPOCHS):
-        state = int(str(f"{action}{distances[distances_index] - 1}"))
-
-        reward = 0.0
-        classification_threshold = distances[distances_index] * DEFAULT_DISTANCE_STEP
-        if epoch == 0:
-            action = qlearner.querysetstate(s=state)
-        else:
-            reward = model.test(
-                smoothing_factor=DEFAULT_SMOOTHING_FACTOR / 10,
-                classification_threshold=classification_threshold,
-                testing_data=testing_data,
-            )
-            action = qlearner.query(s_prime=state, r=reward)
-
-        curr_reward = int(reward)
-        if curr_reward == prev_reward:
-            converged += 1
-            if converged > CONVERGENCE_CONSTANT:
-                if opts.verbose:
-                    print("Classification threshold has reached convergence!")
-                break
-        else:
-            converged = 0
-            prev_reward = curr_reward
-
-        if action == 0:
-            if distances_index + 1 < len(distances):
-                distances_index += 1
-        elif action == 1:
-            if distances_index > 0:
-                distances_index -= 1
-        else:
-            print(f"Unknown action ({action}) provided!")
-            return 1
-
-        if opts.verbose:
-            print(f"Current classification threshold: ({classification_threshold})")
-
-    if opts.verbose:
-        print(
-            f"Discovered classification threshold for provided packet captures: ({classification_threshold})"
-        )
+    calibrated_thresholds = dict()
+    for bucket_size in list(classification_thresholds.keys()):
+        calibrated_thresholds[bucket_size] = results[bucket_size][1]
 
     print(f"Writing trained PAYL model to: {opts.output}")
     with Path(opts.output).open(mode="w") as output_file:
-        for threshold, feature_vector in model.feature_vectors.items():
-            model.feature_vectors[threshold] = feature_vector.tolist()
-        model.feature_vectors[np.inf] = (  # type: ignore
-            DEFAULT_SMOOTHING_FACTOR / 10,
-            classification_threshold,
+        for bucket_size, feature_vector in model.feature_vectors.items():
+            model.feature_vectors[bucket_size] = feature_vector.tolist()
+        model.feature_vectors[PAYL_METADATA_KEY] = (  # type: ignore
+            calibrated_thresholds,
+            opts.protocol,
         )
         output_file.write(json.dumps(model.feature_vectors))
 
