@@ -79,7 +79,6 @@ class Payl:
 
         for i in range(len(self.bucket_sizes)):
             true_positives = 0.0
-            max_distance = 0.0
 
             classification_threshold = classification_thresholds.get(self.bucket_sizes[i], None)
             features = self.feature_vectors.get(self.bucket_sizes[i], None)
@@ -93,11 +92,11 @@ class Payl:
             if not len(this_testing_data):
                 continue
 
-            for element in this_testing_data:
-                testpoints = np.array(self._get_freq_from_str(element))
-                distance = cityblock(testpoints, features)
-                max_distance = max(max_distance, distance)
+            testpoints = np.array([self._get_freq_from_str(element) for element in this_testing_data])
+            distances = np.array([cityblock(testpoint, features) for testpoint in testpoints])
+            max_distance = distances.max()
 
+            for distance in distances:
                 if distance <= classification_threshold:
                     true_positives += 1.0
 
