@@ -1,9 +1,9 @@
 from dpkt import ethernet, pcap
 
-from .basepcapparser import BasePcapParser
+from .pcapparser import PcapParser
 
 
-class PcapParser(BasePcapParser):
+class HttpPcapParser(PcapParser):
     def parse_pcap(self) -> None:
         try:
             with self.filepath.open(mode="rb") as pcap_file:

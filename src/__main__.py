@@ -1,14 +1,11 @@
 """Main entrypoint for the splinter-shell package"""
-
 import logging
 import sys
 
-from .calibrate import main as calibrate_main
-from .test import main as test_main
+from .train import Train
 
 programs = {
-    "calibrate": calibrate_main,
-    "test": test_main,
+    "train": Train,
 }
 
 
@@ -24,7 +21,8 @@ def main() -> int:
         print("\t" + ", ".join(programs.keys()))
         return 1
 
-    return program()
+    if program() is not None:
+        return 0
 
 
 if __name__ == "__main__":

@@ -1,5 +1,3 @@
-from .protocols import http
+from splinter_shell.protocols import http
 
-protocols = {
-    "http": http.PcapParser
-}
+protocols = {"http": http.PcapParser}

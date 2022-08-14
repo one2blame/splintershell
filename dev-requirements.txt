@@ -3,3 +3,4 @@ isort==5.10.1
 mypy==0.950
 mypy-extensions==0.4.3
 pandas==1.4.2
+numpy==1.22.3

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List
 
 
-class BasePcapParser(ABC):
+class PcapParser(ABC):
     def __init__(self, filepath: Path) -> None:
         self.payload_list: List[str] = []
 
