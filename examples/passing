@@ -1,0 +1,7 @@
+GET / HTTP/1.0
+Host: kevinmccarthy.house.gov
+Accept: text/html, text/plain, text/sgml, text/css, application/xhtml+xml, */*;q=0.01
+Accept-Encoding: gzip, compress, bzip2
+Accept-Language: en
+User-Agent: Lynx/2.8.9dev.1 libwww-FM/2.14 SSL-MM/1.4.1 GNUTLS/3.3.8
+Referer: https://en.wikipedia.org/wiki/Kevin_McCarthy_(California_politician)
