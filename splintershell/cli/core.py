@@ -1,12 +1,14 @@
 """CLI for the splintershell package"""
 import sys
 
+from .encode import main as encode_main
 from .test import main as test_main
 from .train import main as train_main
 
 programs = {
     "train": train_main,
     "test": test_main,
+    "encode": encode_main,
 }
 
 

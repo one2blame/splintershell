@@ -1,6 +1,7 @@
 """Functions to train Gaussian mixture models on packet captures and test shellcodes"""
 from pathlib import Path
 
+import numpy as np
 from sklearn.mixture import GaussianMixture
 
 from splintershell.errors import (
@@ -60,7 +61,7 @@ def train_model(
     return model
 
 
-def test_likelihood(shellcode_file: str, model: GaussianMixture) -> float:
+def test_distance(shellcode_file: str, model: GaussianMixture) -> float:
     try:
         assert Path(shellcode_file).exists()
     except AssertionError:
@@ -76,6 +77,9 @@ def test_likelihood(shellcode_file: str, model: GaussianMixture) -> float:
     with Path(shellcode_file).open(mode="rb") as shellcode:
         sample = str("".join(map(chr, shellcode.read())))
 
-    likelihood = model.score(X=freq_dist(samples=[sample]))
+    model_means = model.means_[0]
+    norm_mean = model_means / np.sum(model_means)
+    sample_freq_dist = freq_dist(samples=[sample])[0]
+    norm_sample = sample_freq_dist / np.sum(sample_freq_dist)
 
-    return likelihood
+    return np.linalg.norm(norm_mean - norm_sample, axis=0)

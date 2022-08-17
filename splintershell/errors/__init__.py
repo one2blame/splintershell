@@ -1,5 +1,6 @@
 """splintershell error types"""
 from .arguments import (
+    InvalidFreqDistError,
     InvalidPickledObjectError,
     NonexistentModelFileError,
     NonexistentShellcodeFileError,

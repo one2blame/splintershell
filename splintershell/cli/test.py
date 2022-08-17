@@ -1,12 +1,9 @@
 """Testing program for splintershell CLI"""
-import pickle
 from argparse import ArgumentParser, Namespace
-from pathlib import Path
-
-from sklearn.mixture import GaussianMixture
 
 from splintershell import learning
-from splintershell.errors import InvalidPickledObjectError, NonexistentModelFileError
+
+from .utils import verify_model
 
 
 def get_parsed_args() -> Namespace:
@@ -34,27 +31,10 @@ def get_parsed_args() -> Namespace:
 
 def main() -> int:
     opts = get_parsed_args()
-
-    try:
-        assert Path(opts.model).exists()
-    except AssertionError:
-        raise NonexistentModelFileError(
-            f"Model file does not exist: {str(Path(opts.model).resolve())}"
-        )
-
-    with Path(opts.model).resolve().open(mode="rb") as model_file:
-        model = pickle.load(model_file)
-
-    try:
-        assert isinstance(model, GaussianMixture)
-    except AssertionError:
-        raise InvalidPickledObjectError(
-            f"Pickled object provided is not a Gaussian mixture model: {str(Path(opts.model).resolve())}"
-        )
-
-    likelihood = learning.test_likelihood(shellcode_file=opts.input, model=model)
+    model = verify_model(model_filename=opts.model)
+    distance = learning.test_distance(shellcode_file=opts.input, model=model)
     print(
-        f"Log-likelihood of sample existing within provided distribution: {likelihood}"
+        f"Distance of sample's frequency distribution (normalized) from model mean (normalized): {distance}"
     )
 
     return 0

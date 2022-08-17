@@ -22,5 +22,9 @@ class InvalidPickledObjectError(ArgumentError):
     """ """
 
 
+class InvalidFreqDistError(ArgumentError):
+    """ " """
+
+
 class UnfitModelError(ArgumentError):
     """ """
