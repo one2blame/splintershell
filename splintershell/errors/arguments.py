@@ -6,25 +6,13 @@ class ArgumentError(SplinterShellError):
     """ """
 
 
-class NonexistentTrainingDirectoryError(ArgumentError):
-    """ """
-
-
-class NonexistentShellcodeFileError(ArgumentError):
-    """ """
-
-
-class NonexistentModelFileError(ArgumentError):
-    """ """
-
-
-class InvalidPickledObjectError(ArgumentError):
+class InvalidTrainingDirectoryError(ArgumentError):
     """ """
 
 
 class InvalidFreqDistError(ArgumentError):
-    """ " """
+    """ """
 
 
-class UnfitModelError(ArgumentError):
+class InvalidModelObjectError(ArgumentError):
     """ """

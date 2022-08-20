@@ -1,11 +1,10 @@
 """Encoding program for splintershell CLI"""
+import pickle
 import time
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from splintershell import encoding
-
-from .utils import verify_model
+from splintershell.encoding import blend_shellcode
 
 
 def get_parsed_args() -> Namespace:
@@ -49,12 +48,15 @@ def get_parsed_args() -> Namespace:
 
 def main() -> int:
     opts = get_parsed_args()
-    model = verify_model(model_filename=opts.model)
-    with Path(opts.output).open("wb") as output_file:
-        output_file.write(
-            encoding.blend_shellcode(shellcode_file=opts.input, model=model)
-        )
-    if opts.verbose:
+
+    with Path(opts.model).resolve().open(mode="rb") as model_file:
+        model = pickle.load(model_file)
+
+    with Path(opts.input).resolve().open(mode="rb") as shellcode_file:
+        shellcode = shellcode_file.read()
+
+    with Path(opts.output).resolve().open("wb") as output_file:
+        output_file.write(blend_shellcode(shellcode=shellcode, model=model))
         print(f"Encoded shellcode written to: {Path(opts.output).resolve()}")
 
     return 0

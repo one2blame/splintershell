@@ -4,7 +4,7 @@ import time
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from splintershell import learning
+from splintershell.learning import train_model
 
 
 def get_parsed_args() -> Namespace:
@@ -47,9 +47,10 @@ def get_parsed_args() -> Namespace:
 
 def main() -> int:
     opts = get_parsed_args()
-    with Path(opts.output).open(mode="wb") as output_file:
+
+    with Path(opts.output).resolve().open(mode="wb") as output_file:
         pickle.dump(
-            obj=learning.train_model(
+            obj=train_model(
                 training_dirname=opts.directory,
                 protocol=opts.protocol,
                 verbose=opts.verbose,
@@ -57,7 +58,6 @@ def main() -> int:
             file=output_file,
             protocol=pickle.HIGHEST_PROTOCOL,
         )
-    if opts.verbose:
         print(f"splintershell model written to: {Path(opts.output).resolve()}")
 
     return 0

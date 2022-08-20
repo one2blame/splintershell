@@ -1,11 +1,8 @@
 """splintershell error types"""
 from .arguments import (
     InvalidFreqDistError,
-    InvalidPickledObjectError,
-    NonexistentModelFileError,
-    NonexistentShellcodeFileError,
-    NonexistentTrainingDirectoryError,
-    UnfitModelError,
+    InvalidModelObjectError,
+    InvalidTrainingDirectoryError,
 )
 from .base import SplinterShellError
 from .protocols import ProtocolParsingError, UnsupportedProtocolError

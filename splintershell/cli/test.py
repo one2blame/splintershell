@@ -1,9 +1,9 @@
 """Testing program for splintershell CLI"""
+import pickle
 from argparse import ArgumentParser, Namespace
+from pathlib import Path
 
-from splintershell import learning
-
-from .utils import verify_model
+from splintershell.learning import get_distance
 
 
 def get_parsed_args() -> Namespace:
@@ -31,10 +31,18 @@ def get_parsed_args() -> Namespace:
 
 def main() -> int:
     opts = get_parsed_args()
-    model = verify_model(model_filename=opts.model)
-    distance = learning.test_distance(shellcode_file=opts.input, model=model)
+
+    with Path(opts.model).resolve().open(mode="rb") as model_file:
+        model = pickle.load(model_file)
+
+    with Path(opts.input).resolve().open(mode="rb") as shellcode_file:
+        shellcode = shellcode_file.read()
+
+    distance, size_diff = get_distance(shellcode=shellcode, model=model)
+
     print(
-        f"Distance of sample's frequency distribution (normalized) from model mean (normalized): {distance}"
+        f"Distance of shellcode's frequency distribution (normalized) from model mean (normalized): {distance}"
     )
+    print(f"Size difference between shellcode and model mean: {size_diff}")
 
     return 0

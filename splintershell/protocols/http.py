@@ -18,5 +18,5 @@ class HttpPcapParser(PcapParser):
                     if http_data and all(ord(c) < 256 for c in http_data):
                         self.payload_list.append(http_data)
 
-        except Exception as e:
-            raise ProtocolParsingError(str(e))
+        except Exception as exc:
+            raise ProtocolParsingError(str(exc))
