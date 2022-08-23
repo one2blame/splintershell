@@ -36,6 +36,22 @@ def get_parsed_args() -> Namespace:
         help="pickled, trained model input file",
     )
     parser.add_argument(
+        "--scheme",
+        "-s",
+        dest="scheme",
+        type=str.lower,
+        default="xor",
+        help="shellcode encoding scheme",
+    )
+    parser.add_argument(
+        "--padding",
+        "-p",
+        dest="padding",
+        type=bool,
+        default=True,
+        help="pad shellcode to fit model size, if necessary",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         dest="verbose",
@@ -56,7 +72,14 @@ def main() -> int:
         shellcode = shellcode_file.read()
 
     with Path(opts.output).resolve().open("wb") as output_file:
-        output_file.write(blend_shellcode(shellcode=shellcode, model=model))
+        output_file.write(
+            blend_shellcode(
+                shellcode=shellcode,
+                model=model,
+                scheme=opts.scheme,
+                padding=opts.padding,
+            )
+        )
         print(f"Encoded shellcode written to: {Path(opts.output).resolve()}")
 
     return 0

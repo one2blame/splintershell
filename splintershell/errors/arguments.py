@@ -16,3 +16,7 @@ class InvalidFreqDistError(ArgumentError):
 
 class InvalidModelObjectError(ArgumentError):
     """ """
+
+
+class InvalidParserClassError(ArgumentError):
+    """ """

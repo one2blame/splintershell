@@ -1,0 +1,176 @@
+import pkgutil
+from typing import Tuple
+
+import numpy as np
+
+from splintershell.errors import DecoderReadError, InvalidFreqDistError
+from splintershell.utils import ascii_freq_dict
+
+from .encoder import Encoder
+
+
+class XorEncoder(Encoder):
+    @staticmethod
+    def _substitute(shellcode: bytes, substitution_dict: dict) -> Tuple[list, list]:
+        xor_table = []
+        encoded_shellcode = []
+
+        norm_substitution_dict = {}
+        for char, substitutions in substitution_dict.items():
+            total = 0
+            norm_substitutions = []
+
+            for substitution in substitutions:
+                total += substitution[1]
+
+            for substitution in substitutions:
+                norm_substitutions.append((substitution[0], substitution[1] / total))
+
+            norm_substitution_dict[char] = norm_substitutions
+
+        for byte in shellcode:
+            substitutions = norm_substitution_dict[byte]
+            choices = []
+            probabilities = []
+
+            for substitution in substitutions:
+                choices.append(substitution[0])
+                probabilities.append(substitution[1])
+
+            replacement = ord(chr(np.random.choice(choices, p=probabilities)))
+            encoded_shellcode.append(chr(replacement))
+            xor_table.append(chr(byte ^ replacement))
+
+        return xor_table, encoded_shellcode
+
+    @staticmethod
+    def _calc_substitution_dict(
+        shellcode_freq_dist: list, target_freq_dist: list
+    ) -> dict:
+        norm_shellcode_freq_dist = shellcode_freq_dist / np.sum(shellcode_freq_dist)
+        norm_target_freq_dist = target_freq_dist / np.sum(target_freq_dist)
+
+        shellcode_ascii_freq = sorted(
+            {
+                k: v
+                for k, v in ascii_freq_dict(dist=norm_shellcode_freq_dist).items()
+                if v != 0
+            }.items(),
+            reverse=True,
+            key=lambda item: item[1],
+        )
+
+        target_ascii_freq = sorted(
+            {
+                k: v
+                for k, v in ascii_freq_dict(dist=norm_target_freq_dist).items()
+                if v != 0
+            }.items(),
+            reverse=True,
+            key=lambda item: item[1],
+        )
+
+        m = len(shellcode_ascii_freq)
+        substitution_dict = {}
+        shellcode_totals_dict = {}
+        shellcode_ascii_freq_dict = {}
+
+        for i in range(m):
+            shellcode_char, shellcode_char_freq = shellcode_ascii_freq[i]
+            substitution_dict[shellcode_char] = [target_ascii_freq[i]]
+            shellcode_ascii_freq_dict[shellcode_char] = shellcode_char_freq
+            shellcode_totals_dict[shellcode_char] = target_ascii_freq[i][1]
+
+        for i in range(m):
+            target_ascii_freq.pop(0)
+
+        for character_tuple in target_ascii_freq:
+            ratios = []
+
+            for shellcode_char in shellcode_ascii_freq_dict.keys():
+                ratio = (
+                    shellcode_ascii_freq_dict[shellcode_char]
+                    / shellcode_totals_dict[shellcode_char]
+                )
+                ratios.append((shellcode_char, ratio))
+
+            ratios.sort(key=lambda x: x[1], reverse=True)
+            next_shellcode_char = ratios[0][0]
+            substitution_dict[next_shellcode_char].append(character_tuple)
+            shellcode_totals_dict[next_shellcode_char] += character_tuple[1]
+
+        return substitution_dict
+
+    def encode_shellcode(self, shellcode: bytes, **kwargs) -> None:
+        shellcode_freq_dist = kwargs.get("shellcode_freq_dist", None)
+
+        if shellcode_freq_dist is None:
+            raise InvalidFreqDistError(
+                f"Shellcode frequency distribution provided is None"
+            )
+
+        if (
+            not isinstance(shellcode_freq_dist, np.ndarray)
+            and len(shellcode_freq_dist.shape) != 1
+        ):
+            raise InvalidFreqDistError(
+                f"Shellcode frequency distribution provided is not a 1-dimensional NumPy array"
+            )
+
+        target_freq_dist = kwargs.get("target_freq_dist", None)
+
+        if target_freq_dist is None:
+            raise InvalidFreqDistError(
+                f"Target frequency distribution provided is None"
+            )
+
+        if (
+            not isinstance(target_freq_dist, np.ndarray)
+            and len(target_freq_dist.shape) != 1
+        ):
+            raise InvalidFreqDistError(
+                f"Target frequency distribution provided is not a 1-dimensional NumPy array"
+            )
+
+        substitution_dict = self._calc_substitution_dict(
+            shellcode_freq_dist=shellcode_freq_dist.tolist(),
+            target_freq_dist=target_freq_dist.tolist(),
+        )
+
+        xor_table, encoded_shellcode = self._substitute(
+            shellcode=shellcode, substitution_dict=substitution_dict
+        )
+
+        alignment_char = sorted(
+            {
+                k: v
+                for k, v in ascii_freq_dict(dist=target_freq_dist).items()
+                if v != 0
+            }.items(),
+            reverse=True,
+            key=lambda item: item[1],
+        )[0][0]
+
+        while (len(xor_table)) % 4:
+            xor_table.append(chr(alignment_char))
+
+        while (len(encoded_shellcode)) % 4:
+            encoded_shellcode.append(chr(alignment_char))
+
+        decoder = pkgutil.get_data(__name__, "bin/xor_decoder.bin")
+        if decoder is None:
+            raise DecoderReadError(f"Failed to acquire decoder stub")
+
+        # TODO: fix decoder stub
+        stamped_decoder = decoder.replace(
+            b"\x62\x62\x62\x62\x62\x62\x62\x62",
+            len(encoded_shellcode).to_bytes(8, "little"),
+        )
+
+        xor_table_bytes = bytes("".join(xor_table), "utf8")
+        encoded_shellcode_bytes = bytes("".join(encoded_shellcode), "utf8")
+
+        # TODO: implement padding
+        self.encoded_shellcode = b"".join(
+            [stamped_decoder, encoded_shellcode_bytes, xor_table_bytes]
+        )
