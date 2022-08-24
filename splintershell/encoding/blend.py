@@ -4,7 +4,7 @@ from sklearn.mixture import GaussianMixture
 from splintershell.errors import InvalidModelObjectError, UnsupportedEncodingSchemeError
 from splintershell.utils import freq_dist
 
-from .schemes import encoder_dict
+from .schemes import XorEncoder, encoder_dict
 
 
 def blend_shellcode(
@@ -22,13 +22,21 @@ def blend_shellcode(
             f"Encoding scheme specified not supported: {scheme}"
         )
 
-    sample = str("".join(map(chr, shellcode)))
-    shellcode_freq_dist = freq_dist(samples=[sample])[0]
     encoder_inst = encoder()
-    encoder_inst.encode_shellcode(
-        shellcode=shellcode,
-        shellcode_freq_dist=shellcode_freq_dist,
-        target_freq_dist=model.means_[0],
-    )
+    if isinstance(encoder_inst, XorEncoder):
+        sample = str("".join(map(chr, shellcode)))
+        shellcode_freq_dist = freq_dist(samples=[sample])[0]
+        encoder_inst.encode_shellcode(
+            shellcode=shellcode,
+            shellcode_freq_dist=shellcode_freq_dist,
+            target_freq_dist=model.means_[0],
+        )
+    else:
+        # TODO enable support for more encoders
+        pass
 
-    return encoder_inst.get_encoded_shellcode()
+    if padding:
+        # TODO padding
+        pass
+    else:
+        return encoder_inst.get_encoded_shellcode()

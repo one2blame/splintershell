@@ -48,7 +48,7 @@ def get_parsed_args() -> Namespace:
         "-p",
         dest="padding",
         type=bool,
-        default=True,
+        default=False,
         help="pad shellcode to fit model size, if necessary",
     )
     parser.add_argument(

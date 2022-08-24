@@ -20,6 +20,8 @@ decode_loop:
     inc rcx
     cmp rcx, rdi
     jne decode_loop
+    xor rax, rax
+    mov [rdx + rcx], al
     jmp payload
 
 pop_payload:

@@ -11,39 +11,6 @@ from .encoder import Encoder
 
 class XorEncoder(Encoder):
     @staticmethod
-    def _substitute(shellcode: bytes, substitution_dict: dict) -> Tuple[list, list]:
-        xor_table = []
-        encoded_shellcode = []
-
-        norm_substitution_dict = {}
-        for char, substitutions in substitution_dict.items():
-            total = 0
-            norm_substitutions = []
-
-            for substitution in substitutions:
-                total += substitution[1]
-
-            for substitution in substitutions:
-                norm_substitutions.append((substitution[0], substitution[1] / total))
-
-            norm_substitution_dict[char] = norm_substitutions
-
-        for byte in shellcode:
-            substitutions = norm_substitution_dict[byte]
-            choices = []
-            probabilities = []
-
-            for substitution in substitutions:
-                choices.append(substitution[0])
-                probabilities.append(substitution[1])
-
-            replacement = ord(chr(np.random.choice(choices, p=probabilities)))
-            encoded_shellcode.append(chr(replacement))
-            xor_table.append(chr(byte ^ replacement))
-
-        return xor_table, encoded_shellcode
-
-    @staticmethod
     def _calc_substitution_dict(
         shellcode_freq_dist: list, target_freq_dist: list
     ) -> dict:
@@ -101,6 +68,39 @@ class XorEncoder(Encoder):
 
         return substitution_dict
 
+    @staticmethod
+    def _substitute(shellcode: bytes, substitution_dict: dict) -> Tuple[list, list]:
+        xor_table = []
+        encoded_shellcode = []
+
+        norm_substitution_dict = {}
+        for char, substitutions in substitution_dict.items():
+            total = 0
+            norm_substitutions = []
+
+            for substitution in substitutions:
+                total += substitution[1]
+
+            for substitution in substitutions:
+                norm_substitutions.append((substitution[0], substitution[1] / total))
+
+            norm_substitution_dict[char] = norm_substitutions
+
+        for byte in shellcode:
+            substitutions = norm_substitution_dict[byte]
+            choices = []
+            probabilities = []
+
+            for substitution in substitutions:
+                choices.append(substitution[0])
+                probabilities.append(substitution[1])
+
+            replacement = np.random.choice(choices, p=probabilities)
+            encoded_shellcode.append(replacement)
+            xor_table.append(byte ^ replacement)
+
+        return xor_table, encoded_shellcode
+
     def encode_shellcode(self, shellcode: bytes, **kwargs) -> None:
         shellcode_freq_dist = kwargs.get("shellcode_freq_dist", None)
 
@@ -152,25 +152,20 @@ class XorEncoder(Encoder):
         )[0][0]
 
         while (len(xor_table)) % 4:
-            xor_table.append(chr(alignment_char))
+            xor_table.append(alignment_char)
 
         while (len(encoded_shellcode)) % 4:
-            encoded_shellcode.append(chr(alignment_char))
+            encoded_shellcode.append(alignment_char)
 
         decoder = pkgutil.get_data(__name__, "bin/xor_decoder.bin")
         if decoder is None:
             raise DecoderReadError(f"Failed to acquire decoder stub")
 
-        # TODO: fix decoder stub
         stamped_decoder = decoder.replace(
             b"\x62\x62\x62\x62\x62\x62\x62\x62",
             len(encoded_shellcode).to_bytes(8, "little"),
         )
 
-        xor_table_bytes = bytes("".join(xor_table), "utf8")
-        encoded_shellcode_bytes = bytes("".join(encoded_shellcode), "utf8")
-
-        # TODO: implement padding
         self.encoded_shellcode = b"".join(
-            [stamped_decoder, encoded_shellcode_bytes, xor_table_bytes]
+            [stamped_decoder, bytes(encoded_shellcode), bytes(xor_table)]
         )
