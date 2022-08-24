@@ -157,6 +157,7 @@ class XorEncoder(Encoder):
         while (len(encoded_shellcode)) % 4:
             encoded_shellcode.append(alignment_char)
 
+        # TODO support more architectures
         decoder = pkgutil.get_data(__name__, "bin/xor_decoder.bin")
         if decoder is None:
             raise DecoderReadError(f"Failed to acquire decoder stub")

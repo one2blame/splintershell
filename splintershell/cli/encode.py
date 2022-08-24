@@ -47,7 +47,7 @@ def get_parsed_args() -> Namespace:
         "--padding",
         "-p",
         dest="padding",
-        type=bool,
+        action="store_true",
         default=False,
         help="pad shellcode to fit model size, if necessary",
     )
