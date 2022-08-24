@@ -20,3 +20,7 @@ class InvalidModelObjectError(ArgumentError):
 
 class InvalidParserClassError(ArgumentError):
     """ """
+
+
+class InvalidEncoderClassError(ArgumentError):
+    """ """
