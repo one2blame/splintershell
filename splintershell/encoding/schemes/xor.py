@@ -102,6 +102,19 @@ class XorEncoder(Encoder):
         return xor_table, encoded_shellcode
 
     def encode_shellcode(self, shellcode: bytes, **kwargs) -> None:
+        """Encodes a shellcode sample using the XOR encoding scheme. Returns an
+        encoded shellcode with decoder stub and XOR table.
+
+        :param shellcode: A shellcode sample
+        :type shellcode: bytes
+        :param kwargs: Expected keyword arguments: shellcode_freq_dist,
+        target_freq_dist
+        :raises InvalidFreqDistError: An exception raised if a frequency
+        distribution is not provided or misshaped
+        :type kwargs: dict
+        :return: None
+        :rtype: None
+        """
         shellcode_freq_dist = kwargs.get("shellcode_freq_dist", None)
 
         if shellcode_freq_dist is None:

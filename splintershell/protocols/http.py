@@ -1,4 +1,4 @@
-"""PcapParser definition for HTTP requests and responses"""
+"""PcapParser definition for HTTP"""
 from scapy.all import *
 from scapy.layers.http import *
 
@@ -9,6 +9,13 @@ from .pcapparser import PcapParser
 
 class HttpPcapParser(PcapParser):
     def parse_pcap(self) -> None:
+        """Extracts all HTTP data from a packet capture.
+
+        :raises ProtocolParsingError: Exceptions raised when operating on the
+        packet capture with scapy
+        :return: None
+        :rtype: None
+        """
         try:
             packets = sniff(offline=str(self.filepath), session=TCPSession)
 

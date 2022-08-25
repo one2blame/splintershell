@@ -18,6 +18,22 @@ from splintershell.utils import freq_dist
 def train_model(
     training_dirname: str, protocol: str, verbose: bool = False
 ) -> GaussianMixture:
+    """Trains a Gaussian Mixture Model on specified protocol data for packet
+    captures contained in a training directory.
+
+    :param training_dirname: A directory of packet capture files (.pcap)
+    :type training_dirname: str
+    :raises InvalidTrainingDirectoryError: An exception raised if the training
+    directory does not exist
+    :param protocol: A protocol
+    :type protocol: str
+    :raises UnsupportedProtocolError: An exception raised if the protocol
+    provided is not supported by splintershell
+    :param verbose: Enable verbose output
+    :type verbose: bool
+    :return: A trained GaussianMixture object
+    :rtype: GaussianMixture
+    """
     if not Path(training_dirname).is_dir():
         raise InvalidTrainingDirectoryError(
             f"Training directory does not exist: {Path(training_dirname).resolve()}"
@@ -61,6 +77,17 @@ def train_model(
 
 
 def get_distance(shellcode: bytes, model: GaussianMixture) -> Tuple[float, float]:
+    """Calculates the distance of a shellcode sample from the mean value of a
+    single-cluster, trained Gaussian Mixture Model.
+
+    :param shellcode: A sample shellcode for inspection
+    :type shellcode: bytes
+    :param model: A single-cluster, trained GaussianMixture
+    :type model: GaussianMixture
+    :return: A tuple of distance, and size difference between the shellcode and
+    GMM cluster mean
+    :rtype: Tuple[float, float]
+    """
     if not isinstance(model, GaussianMixture):
         raise InvalidModelObjectError("Model provided is not a GaussianMixture")
 

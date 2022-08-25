@@ -13,6 +13,25 @@ from .schemes import XorEncoder, encoder_dict
 def blend_shellcode(
     shellcode: bytes, model: GaussianMixture, scheme: str, padding: bool
 ) -> bytes:
+    """Blends a shellcode sample to match a trained, single-cluster Gaussian
+    Mixture Model using a specified encoding scheme. Optionally pads the
+    shellcode to also match the size of the Gaussian Mixture Model cluster mean.
+
+    :param shellcode: A shellcode sample
+    :type shellcode: bytes
+    :param model: A trained, single-cluster GaussianMixture
+    :type model: GaussianMixture
+    :raises InvalidModelObjectError: An exception raised when the model
+    parameter provided is not a trained GaussianMixture
+    :param scheme: An encoding scheme
+    :type scheme: str
+    :raises UnsupportedEncodingSchemeError: An exception raised when the
+    encoding scheme request is unsupported
+    :param padding: Enabling shellcode padding
+    :type padding: bool
+    :return: An encoded shellcode sample, complete with decoder stub
+    :rtype: bytes
+    """
     if not isinstance(model, GaussianMixture):
         raise InvalidModelObjectError("Model provided is not a GaussianMixture")
 
