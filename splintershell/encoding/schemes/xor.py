@@ -14,13 +14,12 @@ class XorEncoder(Encoder):
     def _calc_substitution_dict(
         shellcode_freq_dist: list, target_freq_dist: list
     ) -> dict:
-        norm_shellcode_freq_dist = shellcode_freq_dist / np.sum(shellcode_freq_dist)
-        norm_target_freq_dist = target_freq_dist / np.sum(target_freq_dist)
-
         shellcode_ascii_freq = sorted(
             {
                 k: v
-                for k, v in ascii_freq_dict(dist=norm_shellcode_freq_dist).items()
+                for k, v in ascii_freq_dict(
+                    dist=shellcode_freq_dist / np.sum(shellcode_freq_dist)
+                ).items()
                 if v != 0
             }.items(),
             reverse=True,
@@ -30,7 +29,9 @@ class XorEncoder(Encoder):
         target_ascii_freq = sorted(
             {
                 k: v
-                for k, v in ascii_freq_dict(dist=norm_target_freq_dist).items()
+                for k, v in ascii_freq_dict(
+                    dist=target_freq_dist / np.sum(target_freq_dist)
+                ).items()
                 if v != 0
             }.items(),
             reverse=True,
@@ -52,17 +53,19 @@ class XorEncoder(Encoder):
             target_ascii_freq.pop(0)
 
         for character_tuple in target_ascii_freq:
-            ratios = []
+            next_shellcode_char = sorted(
+                [
+                    (
+                        shellcode_char,
+                        shellcode_ascii_freq_dict[shellcode_char]
+                        / shellcode_totals_dict[shellcode_char],
+                    )
+                    for shellcode_char in shellcode_ascii_freq_dict.keys()
+                ],
+                key=lambda x: x[1],
+                reverse=True,
+            )[0][0]
 
-            for shellcode_char in shellcode_ascii_freq_dict.keys():
-                ratio = (
-                    shellcode_ascii_freq_dict[shellcode_char]
-                    / shellcode_totals_dict[shellcode_char]
-                )
-                ratios.append((shellcode_char, ratio))
-
-            ratios.sort(key=lambda x: x[1], reverse=True)
-            next_shellcode_char = ratios[0][0]
             substitution_dict[next_shellcode_char].append(character_tuple)
             shellcode_totals_dict[next_shellcode_char] += character_tuple[1]
 
@@ -75,26 +78,17 @@ class XorEncoder(Encoder):
 
         norm_substitution_dict = {}
         for char, substitutions in substitution_dict.items():
-            total = 0
-            norm_substitutions = []
-
-            for substitution in substitutions:
-                total += substitution[1]
-
-            for substitution in substitutions:
-                norm_substitutions.append((substitution[0], substitution[1] / total))
-
+            total = sum([substitution[1] for substitution in substitutions])
+            norm_substitutions = [
+                (substitution[0], substitution[1] / total)
+                for substitution in substitutions
+            ]
             norm_substitution_dict[char] = norm_substitutions
 
         for byte in shellcode:
             substitutions = norm_substitution_dict[byte]
-            choices = []
-            probabilities = []
-
-            for substitution in substitutions:
-                choices.append(substitution[0])
-                probabilities.append(substitution[1])
-
+            choices = [substitution[0] for substitution in substitutions]
+            probabilities = [substitution[1] for substitution in substitutions]
             replacement = np.random.choice(choices, p=probabilities)
             encoded_shellcode.append(replacement)
             xor_table.append(byte ^ replacement)

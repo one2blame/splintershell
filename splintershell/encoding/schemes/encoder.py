@@ -5,6 +5,7 @@ class Encoder(ABC):
     """Abstract class to define Encoders, intended to be inherited and
     extended by subclasses for encoding shellcodes with different schemes.
     """
+
     def __init__(self) -> None:
         self.encoded_shellcode: bytes = b""
 

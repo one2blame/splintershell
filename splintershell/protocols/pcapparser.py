@@ -11,6 +11,7 @@ class PcapParser(ABC):
     :param filepath: A Path object for a .pcap file
     :type filepath: pathlib.Path
     """
+
     def __init__(self, filepath: Path) -> None:
         self.payload_list: List[str] = []
 

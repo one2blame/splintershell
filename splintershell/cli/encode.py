@@ -78,6 +78,7 @@ def main() -> int:
                 model=model,
                 scheme=opts.scheme,
                 padding=opts.padding,
+                verbose=opts.verbose,
             )
         )
         print(f"Encoded shellcode written to: {Path(opts.output).resolve()}")

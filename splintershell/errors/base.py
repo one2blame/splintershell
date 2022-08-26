@@ -8,6 +8,7 @@ class SplinterShellError(Exception):
     :param message: A related error message
     :type message: str
     """
+
     def __init__(self, message, *args) -> None:
         self._message = message
         super(SplinterShellError, self).__init__(self._message, *args)
