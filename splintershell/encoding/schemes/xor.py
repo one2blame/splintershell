@@ -3,8 +3,8 @@ from typing import Tuple
 
 import numpy as np
 
+from splintershell.common import ascii_freq_dict
 from splintershell.errors import DecoderReadError, InvalidFreqDistError
-from splintershell.utils import ascii_freq_dict
 
 from .encoder import Encoder
 

@@ -6,13 +6,13 @@ import numpy as np
 from loguru import logger
 from sklearn.mixture import GaussianMixture
 
+from splintershell.common import freq_dist
 from splintershell.errors import (
     InvalidModelObjectError,
     InvalidTrainingDirectoryError,
     UnsupportedProtocolError,
 )
 from splintershell.protocols import protocol_dict
-from splintershell.utils import freq_dist
 
 
 def train_model(

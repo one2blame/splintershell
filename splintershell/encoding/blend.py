@@ -4,8 +4,8 @@ from random import shuffle
 from loguru import logger
 from sklearn.mixture import GaussianMixture
 
+from splintershell.common import ascii_freq_dict, freq_dist
 from splintershell.errors import InvalidModelObjectError, UnsupportedEncodingSchemeError
-from splintershell.utils import ascii_freq_dict, freq_dist
 
 from .schemes import XorEncoder, encoder_dict
 
