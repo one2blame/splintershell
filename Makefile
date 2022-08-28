@@ -28,6 +28,7 @@ install: all
 
 clean:
 	rm -rf dist
+	rm -rf build
 	find . -type f -name *.bin -exec rm -rf {} \+ || true
 	find . -type f -name *.o -exec rm -rf {} \+ || true
 	find **/*.egg-info -type d -exec rm -rf {} \+ || true
