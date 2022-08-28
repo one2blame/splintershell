@@ -1,1 +1,1 @@
-# splinter-shell
+# splintershell
