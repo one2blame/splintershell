@@ -1,1 +1,1 @@
-TODO
+recursive-include src/splintershell/ *.bin

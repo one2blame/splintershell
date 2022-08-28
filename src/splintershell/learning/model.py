@@ -63,7 +63,7 @@ def train_model(
         logger.success(
             f"Parsed {len(protocol_data)} [{protocol}] samples from packet capture data!"
         )
-        logger.info(f"Training a Gaussian mixture model...")
+        logger.info("Training a Gaussian mixture model...")
 
     model = GaussianMixture(verbose=int(verbose))
     model.fit(X=freq_dist(samples=protocol_data))
@@ -92,7 +92,7 @@ def get_distance(shellcode: bytes, model: GaussianMixture) -> Tuple[float, float
         raise InvalidModelObjectError("Model provided is not a GaussianMixture")
 
     if not model.converged_:
-        raise InvalidModelObjectError(f"Model provided has not been trained")
+        raise InvalidModelObjectError("Model provided has not been trained")
 
     model_means = model.means_[0]
     norm_mean = model_means / np.sum(model_means)

@@ -1,6 +1,7 @@
 """PcapParser definition for HTTP"""
-from scapy.all import *
-from scapy.layers.http import *
+from scapy.layers.http import HTTP
+from scapy.sendrecv import sniff
+from scapy.sessions import TCPSession
 
 from splintershell.errors import ProtocolParsingError
 

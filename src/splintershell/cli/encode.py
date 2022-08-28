@@ -57,7 +57,7 @@ def get_parsed_args() -> Namespace:
         dest="verbose",
         action="store_true",
         default=False,
-        help=f"print verbose output",
+        help="print verbose output",
     )
     return parser.parse_args()
 

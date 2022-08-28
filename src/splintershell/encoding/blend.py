@@ -1,5 +1,6 @@
 """Functions to encode a shellcode against a trained Gaussian mixture model"""
 from random import shuffle
+from typing import List
 
 from loguru import logger
 from sklearn.mixture import GaussianMixture
@@ -68,7 +69,7 @@ def blend_shellcode(
         encoded_shellcode_size = len(encoded_shellcode)
 
         if encoded_shellcode_size < model_mean_size:
-            shellcode_padding = []
+            shellcode_padding: List[int] = []
             if verbose:
                 logger.info(
                     f"Padding shellcode with [{model_mean_size - encoded_shellcode_size}] bytes"

@@ -113,7 +113,7 @@ class XorEncoder(Encoder):
 
         if shellcode_freq_dist is None:
             raise InvalidFreqDistError(
-                f"Shellcode frequency distribution provided is None"
+                "Shellcode frequency distribution provided is None"
             )
 
         if (
@@ -121,22 +121,20 @@ class XorEncoder(Encoder):
             and len(shellcode_freq_dist.shape) != 1
         ):
             raise InvalidFreqDistError(
-                f"Shellcode frequency distribution provided is not a 1-dimensional NumPy array"
+                "Shellcode frequency distribution provided is not a 1-dimensional NumPy array"
             )
 
         target_freq_dist = kwargs.get("target_freq_dist", None)
 
         if target_freq_dist is None:
-            raise InvalidFreqDistError(
-                f"Target frequency distribution provided is None"
-            )
+            raise InvalidFreqDistError("Target frequency distribution provided is None")
 
         if (
             not isinstance(target_freq_dist, np.ndarray)
             and len(target_freq_dist.shape) != 1
         ):
             raise InvalidFreqDistError(
-                f"Target frequency distribution provided is not a 1-dimensional NumPy array"
+                "Target frequency distribution provided is not a 1-dimensional NumPy array"
             )
 
         substitution_dict = self._calc_substitution_dict(
@@ -167,7 +165,7 @@ class XorEncoder(Encoder):
         # TODO support more architectures
         decoder = pkgutil.get_data(__name__, "bin/xor_decoder.bin")
         if decoder is None:
-            raise DecoderReadError(f"Failed to acquire decoder stub")
+            raise DecoderReadError("Failed to acquire decoder stub")
 
         stamped_decoder = decoder.replace(
             b"\x62\x62\x62\x62\x62\x62\x62\x62",

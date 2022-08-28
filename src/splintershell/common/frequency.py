@@ -48,7 +48,7 @@ def ascii_freq_dict(dist: np.ndarray) -> Dict[int, float]:
     """
     if not isinstance(dist, np.ndarray) and len(dist.shape) != 1:
         raise InvalidFreqDistError(
-            f"Frequency distribution provided is not a 1-dimensional NumPy array"
+            "Frequency distribution provided is not a 1-dimensional NumPy array"
         )
 
     return dict(zip([char for char in range(len(dist))], dist))
