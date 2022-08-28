@@ -10,5 +10,6 @@ deploy:
   edge: true
   on:
     python: 3.8
+    tags: true
   password:
     secure: RrN6g3magTFQcn2WTl5+Z86J3BhVnUQa0rrgOrBrHFTztX1u9B/prOwzH9RmF+S4e82BlPU8FghdqaM2n74Da/ViW0fpsaeNEzRSgZYMrHo+WAF/0hdh4Gqws14Os22tV7RVegNo4+3HTYI4A4gronpxFDNlD2wnyYI2cnm7hWdGHeqlFf0BuTURb84qb2uQB1EJofBhR33cSGafjbfcvykvny/R44a3cHlwMEp1YpJ0/n9s1htWDgkiz2IceIPM8rRsfHZiWxLgOPdK+Bm68YQuHYzHdTSK85YZ65IMyZ74JunCpQJ2cdmtQQmYZChcer9kNCSz5XZ3d3MO3gLHO0bCgyZO7uVDYPtscIODVT8gfcpMZNj/bZh8wZvTwbvbCn9M4Z9ZHW768j/V0mQRlGV931/ei0lEV4KKUkcT9Sy6D3sctERKNGZBgWgIhJ/i+U6wkcisRoVlD4qiaQaIaHHql2EbMSgttHco89XabS/3/CDmknmWhk+7GrBmXvEa9UBkwzdyrwgU8px/GFyCVUSMhW//Vz9IiAnJiy1gqCKj2fp9dAhJo6N9ObObk8rbcMst2KQ65/roDn8BNqtRVqTBuZCZ5BD7UGqhF+hwIEWuog05kIGWikU36HPJ1qb9pfBxM1wqD4+EeiWgfDzWxLT+HzbMMCN6rnoJdbrzlNA=
