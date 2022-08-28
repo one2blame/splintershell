@@ -19,7 +19,7 @@ decoders:
 	$(MAKE) -C $(DECODER_SRC_DIR)
 
 package:
-	python3 -m build
+	python3 setup.py sdist bdist_wheel
 
 .PHONY: all fmt lint decoders package install clean
 
